@@ -9,8 +9,11 @@ This is a simple batch script that creates .apbx playbook files for use with [AM
 - Outputs the result as playbook.apbx in the root directory
 
 ## 📁 Folder Structure
+
 ├── your-repo/
+
 ├── build-playbook.bat # Main build script
+
 ├── src/ # Your playbook contents
 
 ## 🚀 How to Use
