@@ -5,59 +5,52 @@ REM ========================================
 REM Build playbook from src folder
 REM ========================================
 
-echo [*] Building playbook...
+echo [*] Starting playbook build...
 
-REM Change to the script directory to be safe
-pushd "%~dp0"
+REM Change to the directory of this script
+pushd "%~dp0" >nul
 
-REM Check if PowerShell is available
+REM Check for PowerShell
 where powershell >nul 2>&1
 if errorlevel 1 (
     echo [!] PowerShell is not available. Aborting.
-    popd
-    pause
-    exit /b 1
+    goto :cleanup
 )
 
-REM Clean previous builds
-echo [*] Cleaning old build artifacts...
-del /f /q playbook.zip >nul 2>&1
-del /f /q playbook.apbx >nul 2>&1
+REM Clean previous build artifacts
+echo [*] Cleaning previous build artifacts...
+for %%F in (playbook.zip playbook.apbx) do (
+    if exist "%%F" del /f /q "%%F" >nul 2>&1
+)
 
-REM Ensure src folder exists
+REM Check for src folder
 if not exist ".\src\" (
     echo [!] 'src' folder not found. Nothing to build.
-    popd
-    pause
-    exit /b 1
+    goto :cleanup
 )
 
-REM Create ZIP archive from the src folder
-echo [*] Compressing src folder...
+REM Compress src folder into ZIP
+echo [*] Compressing 'src' folder into playbook.zip...
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "Compress-Archive -Path '.\src\*' -DestinationPath '.\playbook.zip' -Force"
 
 if errorlevel 1 (
-    echo [!] Build failed during compression!
-    popd
-    pause
-    exit /b 1
+    echo [!] Compression failed. Aborting build.
+    goto :cleanup
 )
 
-REM Rename ZIP to APBX format
-echo [*] Renaming to playbook.apbx...
+REM Rename ZIP to APBX
+echo [*] Renaming ZIP to playbook.apbx...
 ren playbook.zip playbook.apbx
 
-REM Confirm success
+REM Check final result
 if exist playbook.apbx (
-    echo [+] Build succeeded! Created: playbook.apbx
+    echo [+] Build succeeded! Output: playbook.apbx
 ) else (
-    echo [!] Unexpected error: .apbx file not found after rename.
-    popd
-    pause
-    exit /b 1
+    echo [!] Build failed: playbook.apbx not found after renaming.
 )
 
-popd
+:cleanup
+popd >nul
 pause
 endlocal
